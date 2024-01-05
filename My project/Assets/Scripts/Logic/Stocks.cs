@@ -3,54 +3,49 @@ using UnityEngine;
 public class Stocks : MonoBehaviour
 {
     public float initialPrice = 100.0f;  // Initial stock price
-    public float volatility = 2.0f;  // Volatility factor
+    public float volatility = 0.02f;     // Volatility factor (adjust as needed)
 
+    private float currentPrice;
     private LineRenderer lineRenderer;
-    private float elapsedTime = 0.0f;
-    private float[] stockPrices;
+    private float timer = 0.0f;
 
     void Start()
     {
+        currentPrice = initialPrice;
         lineRenderer = GetComponent<LineRenderer>();
-        stockPrices = new float[1];
-
-        // Initialize stock prices
-        stockPrices[0] = initialPrice;
-
-        // Visualize initial stock price
-        VisualizeStockPrices();
+        lineRenderer.positionCount = 0;
     }
 
     void Update()
     {
-        // Simulate stock price update every second
-        elapsedTime += Time.deltaTime;
-        if (elapsedTime >= 1.0f)
+        // Update stock price every second of game time
+        if (timer >= 1.0f)
         {
             UpdateStockPrice();
-            VisualizeStockPrices();
-
-            elapsedTime = 0.0f;
+            UpdateLineRenderer();
+            timer = 0.0f;
         }
+
+        timer += Time.deltaTime;
     }
 
     void UpdateStockPrice()
     {
+        // Simulate random fluctuations in stock price
         float randomFactor = Random.Range(-volatility, volatility);
-        float newPrice = stockPrices[stockPrices.Length - 1] + randomFactor;
+        currentPrice += currentPrice * randomFactor;
 
-        // Resize the array to accommodate the new price
-        System.Array.Resize(ref stockPrices, stockPrices.Length + 1);
-        stockPrices[stockPrices.Length - 1] = newPrice;
+        // Ensure the stock price stays within reasonable limits
+        currentPrice = Mathf.Clamp(currentPrice, 1.0f, float.MaxValue);
+
+        Debug.Log("Current Stock Price: $" + currentPrice.ToString("F2"));
     }
 
-    void VisualizeStockPrices()
+    void UpdateLineRenderer()
     {
-        lineRenderer.positionCount = stockPrices.Length;
-
-        for (int i = 0; i < stockPrices.Length; i++)
-        {
-            lineRenderer.SetPosition(i, new Vector3(i, stockPrices[i], 0));
-        }
+        // Add the current stock price to the line renderer
+        int pointCount = lineRenderer.positionCount;
+        lineRenderer.positionCount = pointCount + 1;
+        lineRenderer.SetPosition(pointCount, new Vector3(timer, currentPrice, 0));
     }
 }
